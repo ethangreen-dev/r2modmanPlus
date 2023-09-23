@@ -18,6 +18,12 @@ export default function(): CoreRuleType {
                 defaultFileExtensions: [".pak"],
                 trackingMethod: "STATE",
                 subRoutes: [],
+            },
+            {
+                route: path.join("shimloader/config"),
+                defaultFileExtensions: [".modconf"],
+                trackingMethod: "NONE",
+                subRoutes: [],
             }
         ]
     }

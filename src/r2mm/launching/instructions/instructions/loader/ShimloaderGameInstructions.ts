@@ -10,9 +10,10 @@ export default class ShimloaderGameInstructions extends GameInstructionGenerator
     public async generate(game: Game, profile: Profile): Promise<GameInstruction> {
         const ue4ssDir = path.join(profile.getPathOfProfile(), "shimloader", "ue4ss_mods");
         const bpDir = path.join(profile.getPathOfProfile(), "shimloader", "bp_mods");
+        const configDir = path.join(profile.getPathOfProfile(), "shimloader", "config");
 
         return {
-            moddedParameters: `--ue4ss-mods "${ue4ssDir}" --bp-mods "${bpDir}"`,
+            moddedParameters: `--ue4ss-mods "${ue4ssDir}" --bp-mods "${bpDir}" --config-dir "${configDir}"`,
             vanillaParameters: `--disable-mods`
         }
     }
