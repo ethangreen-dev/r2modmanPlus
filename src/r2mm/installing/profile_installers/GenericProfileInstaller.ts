@@ -97,6 +97,39 @@ class GodotMLInstaller extends PackageInstaller {
     }
 }
 
+class ShimloaderInstaller extends PackageInstaller {
+    /**
+     * Handle installation of votv-shimloader
+     */
+    async install(vslLocation: string, modLoaderMapping: ModLoaderPackageMapping, profile: Profile) {
+        const fs = FsProvider.instance;
+
+        const ue4ssDir = path.join(vslLocation, "UE4SS");
+        const ue4ssFiles = ["ue4ss.dll", "UE4SS-settings.ini"];
+        
+        for (const file of ue4ssFiles) {
+            const filePath = path.join(ue4ssDir, file);
+            const fileDest = path.join(profile.getPathOfProfile(), file);
+
+            await fs.copyFile(filePath, fileDest);
+        }
+
+        const luaMods = path.join(vslLocation, "UE4SS", "Mods");
+
+        if (await fs.exists(luaMods)) {
+            const dest = path.join(profile.getPathOfProfile(), "shimloader", "ue4ss_mods");
+            await fs.copyFolder(luaMods, dest);
+        }
+
+        const shimloaderFile = path.join(vslLocation, "dxgi.dll");
+
+        if (await fs.exists(shimloaderFile)) {
+            const dest = path.join(profile.getPathOfProfile(), "dxgi.dll");
+            await fs.copyFile(shimloaderFile, dest);
+        }
+    }
+}
+
 
 
 export default class GenericProfileInstaller extends ProfileInstallerProvider {
@@ -236,6 +269,7 @@ export default class GenericProfileInstaller extends ProfileInstallerProvider {
             case PackageLoader.MELON_LOADER: await (new MelonLoaderInstaller()).install(bieLocation, modLoaderMapping, profile); break;
             case PackageLoader.GODOT_ML: await (new GodotMLInstaller()).install(bieLocation, modLoaderMapping, profile); break;
             case PackageLoader.NORTHSTAR: await (new BepInExInstaller()).install(bieLocation, modLoaderMapping, profile); break;
+            case PackageLoader.SHIMLOADER: await (new ShimloaderInstaller()).install(bieLocation, modLoaderMapping, profile); break;
         }
         return Promise.resolve(null);
     }

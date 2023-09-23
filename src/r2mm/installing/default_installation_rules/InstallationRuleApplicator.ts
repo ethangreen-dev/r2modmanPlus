@@ -10,6 +10,7 @@ import InstallRules_Subnautica from '../default_installation_rules/game_rules/In
 import InstallRules_SubnauticaBZ from '../default_installation_rules/game_rules/InstallRules_SubnauticaBZ';
 import InstallRules_Titanfall2 from '../default_installation_rules/game_rules/InstallRules_Titanfall2';
 import InstallRules_BONELAB from '../default_installation_rules/game_rules/InstallRules_BONELAB';
+import InstallRules_VotV from './game_rules/InstallRules_VotV';
 import { buildBepInExRules } from '../default_installation_rules/game_rules/InstallRules_BepInex';
 import * as path from 'path';
 import { buildGodotMLRules } from "../default_installation_rules/game_rules/InstallRules_GodotML";
@@ -112,6 +113,7 @@ export default class InstallationRuleApplicator {
             buildBepInExRules("Sunkenland"),
             buildBepInExRules("Atomicrops"),
             buildBepInExRules("Erenshor"),
+            InstallRules_VotV(),
         ]
     }
 }

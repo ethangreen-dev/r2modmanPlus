@@ -62,6 +62,7 @@ const MODLOADER_PACKAGES = [
     new ModLoaderPackageMapping("Modding_Council-BepInExPack_of_Legend", "BepInExPack_of_Legend", PackageLoader.BEPINEX),
     new ModLoaderPackageMapping("BepInEx-BepInExPack_Thronefall", "BepInExPack", PackageLoader.BEPINEX),
     new ModLoaderPackageMapping("BepInEx-BepInExPack_WizardWithAGun", "BepInExPack", PackageLoader.BEPINEX),
+    new ModLoaderPackageMapping("0xFFF7-votv_shimloader", "", PackageLoader.SHIMLOADER),
 ];
 
 
@@ -149,6 +150,7 @@ const VARIANTS = {
     Sunkenland: MODLOADER_PACKAGES,
     Atomicrops: MODLOADER_PACKAGES,
     Erenshor: MODLOADER_PACKAGES,
+    VotV: MODLOADER_PACKAGES,
 };
 // Exported separately from the definition in order to preserve the key names in the type definition.
 // Otherwise this would become [key: string] and we couldn't use the game names for type hinting elsewhere.

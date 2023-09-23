@@ -4,4 +4,5 @@ export enum PackageLoader {
     NORTHSTAR,
     GODOT_ML,
     ANCIENT_DUNGEON_VR,
+    SHIMLOADER,
 }

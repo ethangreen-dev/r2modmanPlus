@@ -514,6 +514,13 @@ export default class GameManager {
             "https://thunderstore.io/c/erenshor/api/v1/package/", "https://raw.githubusercontent.com/ebkr/r2modmanPlus/master/modExclusions.md",
             [new StorePlatformMetadata(StorePlatform.STEAM, "2382520")], "Erenshor.jpg",
             GameSelectionDisplayMode.VISIBLE, GameInstanceType.GAME, PackageLoader.BEPINEX, []),
+
+        new Game(
+            "Voices of the Void", "VotV", "VotV",
+            "", ["VotV-Win64-Shipping.exe"], "",
+            "https://thunderstore.io/c/voices-of-the-void/api/v1/package/", "https://raw.githubusercontent.com/ebkr/r2modmanPlus/master/modExclusions.md",
+            [new StorePlatformMetadata(StorePlatform.OTHER)], "VotV.png",
+            GameSelectionDisplayMode.VISIBLE, GameInstanceType.GAME, PackageLoader.SHIMLOADER, ["votv"])
     ];
 
     static get activeGame(): Game {
