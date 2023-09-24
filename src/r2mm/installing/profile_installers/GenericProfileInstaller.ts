@@ -104,28 +104,30 @@ class ShimloaderInstaller extends PackageInstaller {
     async install(vslLocation: string, modLoaderMapping: ModLoaderPackageMapping, profile: Profile) {
         const fs = FsProvider.instance;
 
-        const ue4ssDir = path.join(vslLocation, "UE4SS");
-        const ue4ssFiles = ["ue4ss.dll", "UE4SS-settings.ini"];
-        
-        for (const file of ue4ssFiles) {
-            const filePath = path.join(ue4ssDir, file);
-            const fileDest = path.join(profile.getPathOfProfile(), file);
+        const targets = [
+            ["dxgi.dll", "dxgi.dll"],
+            ["UE4SS/ue4ss.dll", "ue4ss.dll"],
+            ["UE4SS/UE4SS-settings.ini", "UE4SS-settings.ini"],
+            ["UE4SS/Mods", "shimloader/ue4ss_mods"],
+        ];
 
-            await fs.copyFile(filePath, fileDest);
+        for (const targetPath of targets) {
+            const absSrc = path.join(vslLocation, targetPath[0]);
+            const absDest = path.join(profile.getPathOfProfile(), targetPath[1]);
+
+            const srcStat = await fs.lstat(absSrc);
+
+            if (srcStat.isFile()) {
+                fs.copyFile(absSrc, absDest);
+            } else {
+                fs.copyFolder(absSrc, absDest);
+            }
         }
 
-        const luaMods = path.join(vslLocation, "UE4SS", "Mods");
-
-        if (await fs.exists(luaMods)) {
-            const dest = path.join(profile.getPathOfProfile(), "shimloader", "ue4ss_mods");
-            await fs.copyFolder(luaMods, dest);
-        }
-
-        const shimloaderFile = path.join(vslLocation, "dxgi.dll");
-
-        if (await fs.exists(shimloaderFile)) {
-            const dest = path.join(profile.getPathOfProfile(), "dxgi.dll");
-            await fs.copyFile(shimloaderFile, dest);
+        // The config subdir needs to be created for shimloader (it will get cranky if it's not there).
+        const configDir = path.join(profile.getPathOfProfile(), "shimloader", "config");
+        if (!await fs.exists(configDir)) {
+            await fs.mkdirs(configDir);
         }
     }
 }
