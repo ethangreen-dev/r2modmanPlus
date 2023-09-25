@@ -452,6 +452,64 @@ export default class GenericProfileInstaller extends ProfileInstallerProvider {
         }
     }
 
+    private async installUe4ssLuaScript(profile: Profile, rule: ManagedRule, installSources: string[], mod: ManifestV2) {
+        const ruleDir = path.join(profile.getPathOfProfile(), rule.route);
+        const fs = FsProvider.instance;
+
+        await FileUtils.ensureDirectory(ruleDir);
+
+        const dirsToInstall = [];
+
+        for (const source of installSources) {
+            // We have two heuristics to determine the parent of the lua script file.
+            // One is to detect of the script file is contained within a `Scripts` directory, whose parent is what we install.
+            // The other is to walk back through the path's ancestors until we reach a dir with the name `Mods`.
+            const sourceStat = await fs.lstat(source);
+            if (!sourceStat.isFile()) {
+                continue;
+            }
+
+            const sourceParent = path.dirname(source);
+            if (path.basename(sourceParent).toLowerCase() == "scripts") {
+                dirsToInstall.push(path.dirname(sourceParent));
+                continue;
+            }
+
+            // Walk back up the directory tree until we reach an iteration limit OR hit a directory called "mods".
+            var currentDir = sourceParent;
+            for (let i = 0; i < 3; i++) {
+                const parentDir = path.dirname(currentDir);
+
+                if (path.basename(parentDir).toLowerCase() == "mods") {
+                    dirsToInstall.push(currentDir);
+                    continue;
+                }
+
+                currentDir = parentDir;
+            }
+        }
+
+        const fileRelocations = new Map<string, string>();
+        const baseDestDir = path.join("shimloader", "ue4ss_mods");
+
+        for (const dirToInstall of dirsToInstall) {
+            const tree = await FileTree.buildFromLocation(dirToInstall);
+            const relativeDest = path.join(baseDestDir, path.basename(dirToInstall));
+
+            if (tree instanceof R2Error) {
+                throw tree;
+            }
+
+            for (const subFile of tree.getRecursiveFiles()) {
+                fileRelocations.set(subFile, path.join(relativeDest, path.relative(dirToInstall, subFile)))
+            }
+
+            await fs.copyFolder(dirToInstall, path.join(profile.getPathOfProfile(), relativeDest));
+        }
+
+        await this.addToStateFile(mod, fileRelocations, profile);
+    }
+
     async resolveBepInExTree(profile: Profile, location: string, folderName: string, mod: ManifestV2, tree: FileTree): Promise<R2Error | void> {
         const installationIntent = await this.buildInstallForRuleSubtype(location, folderName, mod, tree);
         for (let [rule, files] of installationIntent.entries()) {
@@ -462,6 +520,7 @@ export default class GenericProfileInstaller extends ProfileInstallerProvider {
                 case 'NONE': await this.installUntracked(profile, managedRule, files, mod); break;
                 case 'SUBDIR_NO_FLATTEN': await this.installSubDirNoFlatten(profile, managedRule, files, mod); break;
                 case 'PACKAGE_ZIP': await this.installPackageZip(profile, managedRule, files, mod); break;
+                case 'UE4SS_LUA': await this.installUe4ssLuaScript(profile, managedRule, files, mod); break;
             }
         }
         return Promise.resolve(undefined);

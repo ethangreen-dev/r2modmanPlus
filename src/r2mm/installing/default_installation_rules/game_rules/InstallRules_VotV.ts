@@ -8,6 +8,12 @@ export default function(): CoreRuleType {
         relativeFileExclusions: ["manifest.json", "README.md", "icon.png", "LICENCE"],
         rules: [
             {
+                route: path.join("shimloader/ue4ss_mods"),
+                defaultFileExtensions: [".lua"],
+                trackingMethod: "UE4SS_LUA",
+                subRoutes: []
+            },
+            {
                 route: path.join("shimloader/bp_mods"),
                 defaultFileExtensions: [".pak"],
                 trackingMethod: "STATE",
