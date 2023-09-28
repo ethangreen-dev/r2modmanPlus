@@ -84,10 +84,11 @@ export default abstract class ProfileInstallerProvider {
 
     /**
      * Custom install method for handling BepInEx installations.
+     * @param mod
      * @param bieLocation
      * @param bepInExVariant
      * @param profile
      */
-    abstract installModLoader(bieLocation: string, modLoaderMapping: ModLoaderPackageMapping, profile: Profile): Promise<R2Error | null>;
+    abstract installModLoader(mod: ManifestV2, bieLocation: string, modLoaderMapping: ModLoaderPackageMapping, profile: Profile): Promise<R2Error | null>;
 
 }

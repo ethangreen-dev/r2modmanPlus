@@ -18,13 +18,14 @@ import FileWriteError from '../../../model/errors/FileWriteError';
 import FileUtils from '../../../utils/FileUtils';
 import { PackageLoader } from '../../../model/installing/PackageLoader';
 import ZipProvider from "../../../providers/generic/zip/ZipProvider";
+import ProfileModList from 'src/r2mm/mods/ProfileModList';
 
 const basePackageFiles = ["manifest.json", "readme.md", "icon.png"];
 
 
 
 abstract class PackageInstaller {
-    abstract install(mlLocation: string, modLoaderMapping: ModLoaderPackageMapping, profile: Profile): Promise<void>;
+    abstract install(mod: ManifestV2, mlLocation: string, modLoaderMapping: ModLoaderPackageMapping, profile: Profile): Promise<void>;
     // abstract uninstall(): Promise<void>;  // TODO: Implement
 }
 
@@ -41,7 +42,7 @@ class BepInExInstaller extends PackageInstaller {
     /**
      * Handles installation of BepInEx
      */
-    async install(bieLocation: string, modLoaderMapping: ModLoaderPackageMapping, profile: Profile) {
+    async install(mod: ManifestV2, bieLocation: string, modLoaderMapping: ModLoaderPackageMapping, profile: Profile) {
         let bepInExRoot: string;
         if (modLoaderMapping.rootFolder.trim().length > 0) {
             bepInExRoot = path.join(bieLocation, modLoaderMapping.rootFolder);
@@ -65,7 +66,7 @@ class MelonLoaderInstaller extends PackageInstaller {
     /**
      * Handles installation of MelonLoader
      */
-    async install(mlLocation: string, modLoaderMapping: ModLoaderPackageMapping, profile: Profile) {
+    async install(mod: ManifestV2, mlLocation: string, modLoaderMapping: ModLoaderPackageMapping, profile: Profile) {
         for (const item of (await FsProvider.instance.readdir(mlLocation))) {
             if (!basePackageFiles.includes(item.toLowerCase())) {
                 if ((await FsProvider.instance.stat(path.join(mlLocation, item))).isFile()) {
@@ -83,7 +84,7 @@ class GodotMLInstaller extends PackageInstaller {
     /**
      * Handles installation of GodotML
      */
-    async install(mlLocation: string, modLoaderMapping: ModLoaderPackageMapping, profile: Profile) {
+    async install(mod: ManifestV2, mlLocation: string, modLoaderMapping: ModLoaderPackageMapping, profile: Profile) {
         const copyFrom = path.join(mlLocation, "addons", "mod_loader");
         const copyTo = path.join(profile.getPathOfProfile(), "addons", "mod_loader");
         const fs = FsProvider.instance;
@@ -101,27 +102,35 @@ class ShimloaderInstaller extends PackageInstaller {
     /**
      * Handle installation of votv-shimloader
      */
-    async install(vslLocation: string, modLoaderMapping: ModLoaderPackageMapping, profile: Profile) {
+    async install(mod: ManifestV2, vslLocation: string, modLoaderMapping: ModLoaderPackageMapping, profile: Profile) {
         const fs = FsProvider.instance;
+        const fileRelocations = new Map<string, string>();
 
         const targets = [
             ["dxgi.dll", "dxgi.dll"],
             ["UE4SS/ue4ss.dll", "ue4ss.dll"],
             ["UE4SS/UE4SS-settings.ini", "UE4SS-settings.ini"],
-            ["UE4SS/Mods", "shimloader/ue4ss_mods"],
         ];
+
+        const ue4ssTree = await FileTree.buildFromLocation(path.join(vslLocation, "UE4SS/Mods"));
+        if (ue4ssTree instanceof R2Error) {
+            throw ue4ssTree;
+        }
+
+        for (const subFile of ue4ssTree.getRecursiveFiles()) {
+            const relSrc = path.relative(path.join(vslLocation, "UE4SS/Mods"), subFile);
+
+            targets.push([path.join("UE4SS/Mods", relSrc), path.join("shimloader/ue4ss_mods", relSrc)]);
+        }
 
         for (const targetPath of targets) {
             const absSrc = path.join(vslLocation, targetPath[0]);
             const absDest = path.join(profile.getPathOfProfile(), targetPath[1]);
 
-            const srcStat = await fs.lstat(absSrc);
+            await FileUtils.ensureDirectory(path.dirname(absDest));
+            await fs.copyFile(absSrc, absDest);
 
-            if (srcStat.isFile()) {
-                fs.copyFile(absSrc, absDest);
-            } else {
-                fs.copyFolder(absSrc, absDest);
-            }
+            fileRelocations.set(absSrc, targetPath[1]);
         }
 
         // The config subdir needs to be created for shimloader (it will get cranky if it's not there).
@@ -129,6 +138,10 @@ class ShimloaderInstaller extends PackageInstaller {
         if (!await fs.exists(configDir)) {
             await fs.mkdirs(configDir);
         }
+
+        // HACK: Doing this so we can reuse state file code.
+        const testThing = new GenericProfileInstaller();
+        await testThing.addToStateFile(mod, fileRelocations, profile);
     }
 }
 
@@ -259,19 +272,19 @@ export default class GenericProfileInstaller extends ProfileInstallerProvider {
         const bepInExVariant = MOD_LOADER_VARIANTS[activeGame.internalFolderName];
         const variant = bepInExVariant.find(value => value.packageName.toLowerCase() === mod.getName().toLowerCase());
         if (variant !== undefined) {
-            return this.installModLoader(cachedLocationOfMod, variant, profile);
+            return this.installModLoader(mod, cachedLocationOfMod, variant, profile);
         }
         return this.installForManifestV2(mod, profile, cachedLocationOfMod);
     }
 
 
-    async installModLoader(bieLocation: string, modLoaderMapping: ModLoaderPackageMapping, profile: Profile): Promise<R2Error | null> {
+    async installModLoader(mod: ManifestV2, bieLocation: string, modLoaderMapping: ModLoaderPackageMapping, profile: Profile): Promise<R2Error | null> {
         switch (modLoaderMapping.loaderType) {
-            case PackageLoader.BEPINEX: await (new BepInExInstaller()).install(bieLocation, modLoaderMapping, profile); break;
-            case PackageLoader.MELON_LOADER: await (new MelonLoaderInstaller()).install(bieLocation, modLoaderMapping, profile); break;
-            case PackageLoader.GODOT_ML: await (new GodotMLInstaller()).install(bieLocation, modLoaderMapping, profile); break;
-            case PackageLoader.NORTHSTAR: await (new BepInExInstaller()).install(bieLocation, modLoaderMapping, profile); break;
-            case PackageLoader.SHIMLOADER: await (new ShimloaderInstaller()).install(bieLocation, modLoaderMapping, profile); break;
+            case PackageLoader.BEPINEX: await (new BepInExInstaller()).install(mod, bieLocation, modLoaderMapping, profile); break;
+            case PackageLoader.MELON_LOADER: await (new MelonLoaderInstaller()).install(mod, bieLocation, modLoaderMapping, profile); break;
+            case PackageLoader.GODOT_ML: await (new GodotMLInstaller()).install(mod, bieLocation, modLoaderMapping, profile); break;
+            case PackageLoader.NORTHSTAR: await (new BepInExInstaller()).install(mod, bieLocation, modLoaderMapping, profile); break;
+            case PackageLoader.SHIMLOADER: await (new ShimloaderInstaller()).install(mod, bieLocation, modLoaderMapping, profile); break;
         }
         return Promise.resolve(null);
     }
@@ -491,6 +504,7 @@ export default class GenericProfileInstaller extends ProfileInstallerProvider {
 
         const fileRelocations = new Map<string, string>();
         const baseDestDir = path.join("shimloader", "ue4ss_mods");
+        const lowercaseExclusions = (this.rule.relativeFileExclusions || []).map(x => x.toLocaleLowerCase());
 
         for (const dirToInstall of dirsToInstall) {
             const tree = await FileTree.buildFromLocation(dirToInstall);
@@ -501,6 +515,10 @@ export default class GenericProfileInstaller extends ProfileInstallerProvider {
             }
 
             for (const subFile of tree.getRecursiveFiles()) {
+                if (lowercaseExclusions.includes(path.basename(subFile).toLowerCase())) {
+                    continue;
+                }
+
                 fileRelocations.set(subFile, path.join(relativeDest, path.relative(dirToInstall, subFile)))
             }
 
@@ -576,20 +594,45 @@ export default class GenericProfileInstaller extends ProfileInstallerProvider {
     }
 
     private async uninstallState(mod: ManifestV2, profile: Profile): Promise<R2Error | null> {
-        const stateFilePath = path.join(profile.getPathOfProfile(), "_state", `${mod.getName()}-state.yml`);
-        if (await FsProvider.instance.exists(stateFilePath)) {
-            const read = await FsProvider.instance.readFile(stateFilePath);
-            const tracker = (yaml.parse(read.toString()) as ModFileTracker);
-            for (const [cacheFile, installFile] of tracker.files) {
-                if (await FsProvider.instance.exists(path.join(profile.getPathOfProfile(), installFile))) {
-                    await FsProvider.instance.unlink(path.join(profile.getPathOfProfile(), installFile));
-                    if ((await FsProvider.instance.readdir(path.dirname(path.join(profile.getPathOfProfile(), installFile)))).length === 0) {
-                        await FsProvider.instance.rmdir(path.dirname(path.join(profile.getPathOfProfile(), installFile)));
-                    }
-                }
-            }
-            await FsProvider.instance.unlink(path.join(profile.getPathOfProfile(), "_state", `${mod.getName()}-state.yml`));
+        const fs = FsProvider.instance;
+        const profileDir = profile.getPathOfProfile();
+        const stateFilePath = path.join(profileDir, "_state", `${mod.getName()}-state.yml`);
+
+        if (!await fs.exists(stateFilePath)) {
+            return Promise.resolve(null);
         }
+
+        const read = await fs.readFile(stateFilePath);
+        const tracker = (yaml.parse(read.toString()) as ModFileTracker);
+
+        const sortedFileTargets = tracker
+            .files
+            .map(x => path.join(profileDir, x[1]))
+            .sort(x => (x.match("/\\/g") || []).length)
+            .reverse();
+
+        for (const installFile of sortedFileTargets) {
+            if (!fs.exists(installFile)) {
+                continue;
+            }
+
+            await fs.unlink(installFile);
+
+            // Remove empty directories, starting at the target file's parent and stopping
+            // at the profile directory.
+            var iterDir = path.dirname(installFile);
+
+            while (iterDir != profileDir && fs.exists(iterDir)) {
+                if ((await fs.readdir(iterDir)).length != 0) {
+                    break;
+                }
+
+                await fs.rmdir(iterDir);
+                iterDir = path.dirname(iterDir);
+            }
+        }
+
+        await fs.unlink(stateFilePath);
         return Promise.resolve(null);
     }
 
