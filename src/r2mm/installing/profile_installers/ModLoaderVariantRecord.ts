@@ -59,10 +59,12 @@ const MODLOADER_PACKAGES = [
     new ModLoaderPackageMapping("GodotModding-GodotModLoader", "", PackageLoader.GODOT_ML),
     new ModLoaderPackageMapping("BepInEx-BepInExPack_Skul", "BepInExPack", PackageLoader.BEPINEX),
     new ModLoaderPackageMapping("BepInEx-BepInExPack_IL2CPP", "BepInExPack", PackageLoader.BEPINEX),
+    new ModLoaderPackageMapping("BepInEx-BepInExPack_x86", "BepInExPack", PackageLoader.BEPINEX),
     new ModLoaderPackageMapping("Modding_Council-BepInExPack_of_Legend", "BepInExPack_of_Legend", PackageLoader.BEPINEX),
     new ModLoaderPackageMapping("BepInEx-BepInExPack_Thronefall", "BepInExPack", PackageLoader.BEPINEX),
     new ModLoaderPackageMapping("BepInEx-BepInExPack_WizardWithAGun", "BepInExPack", PackageLoader.BEPINEX),
     new ModLoaderPackageMapping("SunkenlandModding-BepInExPack_Sunkenland", "BepInExPack_Sunkenland", PackageLoader.BEPINEX),
+    new ModLoaderPackageMapping("BepInEx_Wormtown-BepInExPack", "BepInExPack", PackageLoader.BEPINEX),
     new ModLoaderPackageMapping("0xFFF7-votv_shimloader", "", PackageLoader.SHIMLOADER),
 ];
 
@@ -151,6 +153,13 @@ const VARIANTS = {
     Sunkenland: MODLOADER_PACKAGES,
     Atomicrops: MODLOADER_PACKAGES,
     Erenshor: MODLOADER_PACKAGES,
+    LastTrainOuttaWormtown: MODLOADER_PACKAGES,
+    Dredge: MODLOADER_PACKAGES,
+    CitiesSkylines2: MODLOADER_PACKAGES,
+    LethalCompany: MODLOADER_PACKAGES,
+    MeepleStation: MODLOADER_PACKAGES,
+    VoidCrew: MODLOADER_PACKAGES,
+    Sailwind: MODLOADER_PACKAGES,
     VotV: MODLOADER_PACKAGES,
 };
 // Exported separately from the definition in order to preserve the key names in the type definition.

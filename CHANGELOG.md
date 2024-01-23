@@ -1,3 +1,30 @@
+### 3.1.46
+- Games added:
+  - Sailwind
+  - Meeple Station
+  - Void Crew
+- Bug fixes:
+  - Clicking the version number no longer takes you to a broken link
+  - Pagination takes up less screen space
+- Dependencies can now be uninstalled/disabled without removing the dependent mod
+
+### 3.1.45
+- Games added:
+  - Cities: Skylines II
+  - Lethal Company
+  - DREDGE
+  - Last Train Outta' Wormtown
+  - Wizard With a Gun
+    - Now boots the full game instead of the demo (Thanks to @RandomWolf)
+
+### 3.1.44
+
+- Games added:
+    - Atomicrops
+    - Erenshor
+    - Sunkenland
+    - Wizard with a Gun (Thanks to @RandomWolf)
+
 ### 3.1.43
 All changes were by the Thunderstore team for this release
 
@@ -10,7 +37,6 @@ All changes were by the Thunderstore team for this release
   - We Love Katamari REROLL + Royal Reverie
   - Bomb Rush Cyberfunk
   - Touhou: Lost Branch of Legend
-
 
 ### 3.1.42
 - Games using MelonLoader should now correctly generate assemblies on first launch (EG: BONEWORKS / BONELABS)
