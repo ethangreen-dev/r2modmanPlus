@@ -568,7 +568,14 @@ export default class GameManager {
             "", ["VotV-Win64-Shipping.exe"], "",
             "https://thunderstore.io/c/voices-of-the-void/api/v1/package/", "https://raw.githubusercontent.com/ebkr/r2modmanPlus/master/modExclusions.md",
             [new StorePlatformMetadata(StorePlatform.OTHER)], "VotV.png",
-            GameSelectionDisplayMode.VISIBLE, GameInstanceType.GAME, PackageLoader.SHIMLOADER, ["votv"])
+            GameSelectionDisplayMode.VISIBLE, GameInstanceType.GAME, PackageLoader.SHIMLOADER, ["votv"]),
+
+        new Game(
+            "Palworld", "Palworld", "Palworld",
+            "", ["Palworld-Win64-Shipping.exe"], "",
+            "https://thunderstore.io/c/palworld/api/v1/package/", "https://raw.githubusercontent.com/ebkr/r2modmanPlus/master/modExclusions.md",
+            [new StorePlatformMetadata(StorePlatform.STEAM, "1623730")], "Palworld.png",
+            GameSelectionDisplayMode.VISIBLE, GameInstanceType.GAME, PackageLoader.SHIMLOADER, ["palworld"])
     ];
 
     static get activeGame(): Game {

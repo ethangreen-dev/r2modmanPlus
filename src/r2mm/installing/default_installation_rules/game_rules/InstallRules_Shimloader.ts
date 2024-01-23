@@ -1,10 +1,11 @@
 import type { CoreRuleType } from '../../InstallationRules';
 import * as path from 'path';
+import { GAME_NAME } from '../../profile_installers/ModLoaderVariantRecord';
+import { RuleSubtype } from "../../InstallationRules";
 
-export default function(): CoreRuleType {
-
+export function buildShimloaderRules(gameName: GAME_NAME, extraRules?: RuleSubtype[]): CoreRuleType {
     return {
-        gameName: "VotV",
+        gameName: gameName,
         relativeFileExclusions: ["manifest.json", "README.md", "icon.png", "LICENCE"],
         rules: [
             {
@@ -27,6 +28,4 @@ export default function(): CoreRuleType {
             }
         ]
     }
-
 }
-
